@@ -1,42 +1,63 @@
 # ReleaseLens
 
-**Know what your Spring Boot change can break before you release it.**
+ReleaseLens evaluates the release risk of a Git change before it is merged or deployed. It compares two committed revisions, produces deterministic findings with source evidence, maps supported relationships into an impact graph, and applies a release policy.
 
-ReleaseLens is a local-first change-impact and release-readiness tool. It reads two Git revisions, performs deterministic Java/Spring/Maven/configuration/migration analysis, builds evidence-carrying impact paths, and applies a release policy. Jev and GPT-5.6 Luna are optional enrichment layers; the offline result remains useful without either key.
+The central invariant is simple: **no evidence, no finding**. Every finding includes a repository-relative path, commit SHA, line range, symbol, and bounded source excerpt. Provider output can explain or prioritize the evidence, but it cannot create findings, graph relationships, or source locations.
 
-## Run locally
+## What ReleaseLens examines
 
-Install Java 27, Maven 3.6.3+, and Node 20.9+. Use `.env.example` as a reference for server environment variables, then run:
-
-```powershell
-.\scripts\start-local.ps1
-```
-
-Open <http://localhost:3000>. The backend listens on <http://127.0.0.1:8080>. AI is disabled by default. To enable it, set `RELEASELENS_AI_ENABLED=true`, `JEV_API_KEY`, `OPENAI_API_KEY`, and `SPRING_AI_MODEL_CHAT=openai` in the server environment. The startup scripts do not load a dotenv file automatically.
-
-## What it analyzes
-
-The deterministic engine detects changed files and revisions with JGit, Spring stereotypes and mappings, security annotations, records and DTO surfaces, Maven metadata, configuration keys, Kafka listener declarations, and Flyway operations. Every finding carries a repository-relative file, revision, line range, symbol, and snippet. A finding without evidence cannot be emitted.
+- Git additions, removals, modifications, and renames through JGit
+- Spring component, HTTP mapping, security, transaction, persistence, configuration, and Kafka annotations
+- Java record DTO declarations
+- Maven dependency and plugin declarations
+- Flyway migration operations, including destructive DDL
+- Application configuration keys
+- The presence of adjacent test files for changed production Java files
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  G[Git base/head] --> D[JGit diff]
-  D --> A[Deterministic analyzers]
-  A --> F[Evidence-backed findings]
-  A --> X[Impact graph]
-  X --> B[Blast-radius paths]
-  F --> J[Jev typed decisions]
-  F --> P[Java release policy]
+  G[Git revisions] --> D[JGit snapshot]
+  D --> A[Deterministic analysis]
+  A --> E[Evidence-backed findings]
+  A --> I[Impact graph]
+  I --> B[Blast-radius paths]
+  E --> J[Optional Jev decisions]
+  E --> P[Java release policy]
   J --> P
-  F --> L[Luna explanation]
-  P --> U[REST + Next.js UI]
-  L --> U
+  E --> L[Optional Luna explanation]
+  P --> R[REST API]
+  L --> R
+  R --> U[Next.js interface]
 ```
 
-## Limitations
+Read [the architecture guide](docs/ARCHITECTURE.md) for ownership and data flow, [the analysis guide](docs/ANALYSIS_ENGINE.md) for supported rules, and [the API guide](docs/API.md) for request and response contracts.
 
-Dynamic runtime wiring, reflection, generated sources, and SQL dialect-specific behavior may remain unresolved. The tool reports only relationships it can establish from source evidence. AI output cannot add findings, graph nodes, or source locations.
+## Run ReleaseLens
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/ANALYSIS_ENGINE.md](docs/ANALYSIS_ENGINE.md), [docs/API.md](docs/API.md), and [docs/SECURITY.md](docs/SECURITY.md).
+Install Java 27, Maven 3.6.3 or later, and Node 20.9 or later. Start the backend and frontend in separate terminals:
+
+```powershell
+mvn -pl backend spring-boot:run
+```
+
+```powershell
+npm --prefix frontend run dev
+```
+
+The frontend is served at <http://127.0.0.1:3000> and the API at <http://127.0.0.1:8080>. See [running and configuration](docs/RUNNING.md) for build commands, configuration variables, and provider enablement.
+
+## Providers and offline operation
+
+ReleaseLens starts with provider enrichment disabled. Set `RELEASELENS_AI_ENABLED=true` together with `JEV_API_KEY`, `OPENAI_API_KEY`, and `SPRING_AI_MODEL_CHAT=openai` to enable Jev decisions and GPT-5.6 Luna summaries. The backend reads these variables; the browser never receives provider keys.
+
+The deterministic pipeline, policy, graph, persistence, API, and interface work without either provider key. See [security boundaries](docs/SECURITY.md) and [decision behavior](docs/DECISION_ENGINE.md).
+
+## Sample scenarios
+
+The [commerce-platform fixture](sample-apps/commerce-platform/README.md) and [demo guide](docs/DEMO_SCENARIOS.md) cover API and DTO changes, security changes, destructive migrations, event changes, configuration changes, and internal refactoring.
+
+## Constraints
+
+ReleaseLens establishes only relationships it can support with repository evidence. Dynamic wiring, reflection, generated code, and SQL behavior specific to a database dialect can require manual review. Provider summaries remain explanatory and never override deterministic severity or policy decisions.

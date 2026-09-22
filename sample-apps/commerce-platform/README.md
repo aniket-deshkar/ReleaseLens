@@ -1,3 +1,3 @@
 # Commerce Platform fixture
 
-A small Spring-style multi-service fixture used by ReleaseLens tests and demos. It is source-oriented and does not need to run as a distributed system.
+A compact Spring-style multi-service source fixture for ReleaseLens demonstrations. It contains controller, service, Kafka listener, and Flyway migration examples without requiring a distributed runtime.
