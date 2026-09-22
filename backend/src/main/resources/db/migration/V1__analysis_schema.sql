@@ -1,0 +1,6 @@
+CREATE TABLE analyses (
+  id VARCHAR(64) PRIMARY KEY,
+  status VARCHAR(32) NOT NULL,
+  payload CLOB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL
+);

@@ -1,0 +1,2 @@
+@import "tailwindcss";
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0b1020;color:#e6edf7;font-family:ui-sans-serif,system-ui,sans-serif}button,input{font:inherit}.panel{background:#111a2e;border:1px solid #273553;border-radius:12px}.muted{color:#8da0bd}.badge{border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700}.critical{background:#5b1e32;color:#ffb4c8}.high{background:#5b3a1e;color:#ffd39b}.medium{background:#1e4d5b;color:#afeaff}.low{background:#233d38;color:#adf4ca}

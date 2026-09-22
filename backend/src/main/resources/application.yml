@@ -1,0 +1,31 @@
+server:
+  port: 8080
+  address: 127.0.0.1
+spring:
+  application.name: releaselens
+  datasource:
+    url: jdbc:h2:file:./data/releaselens;AUTO_SERVER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate.ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+  threads.virtual.enabled: true
+  main.keep-alive: true
+  ai:
+    model.chat: ${SPRING_AI_MODEL_CHAT:none}
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      chat.model: ${OPENAI_MODEL:gpt-5.6-luna}
+releaselens:
+  ai-enabled: ${RELEASELENS_AI_ENABLED:false}
+  workspace-root: ${RELEASELENS_WORKSPACE_ROOT:}
+  max-evidence-chars: 2400
+  max-traversal-depth: 8
+  human-review-threshold: 0.80
+  breaking-change-threshold: 0.85
+  downstream-failure-threshold: 0.85
+  release-risk-review-score: 3
